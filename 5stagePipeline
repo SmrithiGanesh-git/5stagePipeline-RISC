@@ -61,7 +61,9 @@ void RISCPipeline::decode() {
     if (memoryInstruction[insIndex] == "BRANCH");
     {
     	if (globalPrediction == "T" && localPredictor[insIndex]=="T"){/* if both the global branch and 
-                                                                          local branch prediction is                                                                             Taken only then the branch                                                                             is taken*/ 
+                                                                          local branch prediction is                                                                             
+                                                                          Taken only then the branch                                                                             
+                                                                          is taken*/ 
     	pc=branchDest;
     	cout<<"Branch taken through prediction"<<endl;
     	}
@@ -80,7 +82,7 @@ void RISCPipeline::execute() {
 }
 
 void RISCPipeline::memory() {
-    // Perform memory operations (e.g., load or store)
+    
     cout << "Inside Memory" << endl<<endl;
 }
 
@@ -93,7 +95,7 @@ void RISCPipeline::writeBack() {
 }
 
 void RISCPipeline::runPipeline() {
-    // Write the result back to registers
+    //running the pipeline with parallel constructs
     while (halt){
     if(exec == 0 ){
     
@@ -146,7 +148,6 @@ void RISCPipeline::runPipeline() {
         t14.join();
     cout<<"-----------------"<<endl;
     }
-    
     }
 }
 
