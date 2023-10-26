@@ -4,105 +4,155 @@
 
 using namespace std;
 
-// Define a simple instruction set
-enum class Opcode {
-    ADD,
-    SUB,
-    MUL,
-    LOAD,
-    STORE
-};
 
 struct Instruction {
-    Opcode opcode;
     int operand1;
     int operand2;
     int result;
 };
 
 class RISCPipeline {
+private:
+    vector<Instruction> instructions;
+    static int pc; // Program Counter
+    bool halt;
+    int registers[32]; // General-purpose registers
+    vector<string> memoryInstruction;
+    vector<string> localPredictor;
+    static string globalPrediction;
+    int insIndex;
+    int branchDest;
+    int exec ;
+
 public:
-    void fetch(int);
+    void fetch();
     void decode();
     void execute();
     void memory();
     void writeBack();
-    void run();
+    void runPipeline();
+    RISCPipeline() : memoryInstruction{"ADD", "BRANCH", "SUB", "MUL", "LOAD", "STORE","ADD","ADD", "BRANCH", "SUB", "MUL", "LOAD", "STORE","ADD"},
+                     localPredictor{"T", "T", "NT", "T", "T", "T"},
+                     halt(true),
+                     branchDest(32),
+                     exec(0)
+                     {}
 
-private:
-    vector<Instruction> instructions;
-    int pc; // Program Counter
-    bool halt;
-    int registers[32]; // General-purpose registers
-    string memory1[10] = {'ADD','SUB','MUL', 'LOAD','STORE'};   // Simple ins memory
 };
+int RISCPipeline::pc(0);
+string RISCPipeline::globalPrediction = "NT";
 
-void RISCPipeline::fetch(int programCounter) {
+void RISCPipeline::fetch() {
     // Fetch instruction from memory using the program counter
-    if(programCounter%32!=0){
-    cout<<"misaligned memory address-need to refetch"<<endl;
+    if (pc % 32 != 0) {
+        cout << "misaligned memory address-need to refetch" << endl;
+    } else {
+        insIndex = pc / 32; // Implementing direct mapped cache
+        pc = pc + 32;
+        cout << "Inside Fetch- Next PC=" << pc << ", Instruction Index=" << insIndex << endl;
     }
-    else{
-     RISCPipeline::pc = programCounter;
-    cout<<"Inside Fetch- PC="<<RISCPipeline::pc<<endl;
-    }
-   
 }
 
 void RISCPipeline::decode() {
     // Decode the fetched instruction
-    cout<<RISCPipeline::pc;
-    cout<<"Inside Decode"<<endl;
+    cout<<endl;
+    cout << "Inside Decode: " << endl;
+    cout<<"Instruction dealing with is :"<<memoryInstruction[insIndex]<<endl;
+    if (memoryInstruction[insIndex] == "BRANCH");
+    {
+    	if (globalPrediction == "T" && localPredictor[insIndex]=="T"){/* if both the global branch and 
+                                                                          local branch prediction is                                                                             Taken only then the branch                                                                             is taken*/ 
+    	pc=branchDest;
+    	cout<<"Branch taken through prediction"<<endl;
+    	}
+    	else{
+    	globalPrediction == "NT";
+    	localPredictor[insIndex]=="NT";
+    	}
+    
+    }
+    cout<<endl;
 }
 
 void RISCPipeline::execute() {
     // Execute the decoded instruction
-    cout<<"Inside Execute"<<endl;
+    cout << "Inside Execute" << endl<<endl;
 }
 
 void RISCPipeline::memory() {
     // Perform memory operations (e.g., load or store)
-    cout<<"Inside Memory"<<endl;
+    cout << "Inside Memory" << endl<<endl;
 }
 
 void RISCPipeline::writeBack() {
     // Write the result back to registers
-    cout<<"Write Back"<<endl;
-    halt = true;
+    cout << "Write Back" << endl<<endl;
+    exec = 1;
+    if(insIndex==memoryInstruction.size())
+    halt=false;
 }
 
-/*void RISCPipeline::run() {
+void RISCPipeline::runPipeline() {
+    // Write the result back to registers
+    while (halt){
+    if(exec == 0 ){
     
-    
-    std::thread t1(RISCPipeline.fetch);
-    std::thread t2(RISCPipeline.decode);
-    std::thread t3(RISCPipeline.execute);
-    std::thread t4(RISCPipeline.memory);
-    std::thread t5(RISCPipeline.writeBack);
+        fetch();
+    cout<<"-----------------"<<endl;
 
-    // Join threads to wait for their completion
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
-    t5.join();
+        thread t1(&RISCPipeline::decode, this);
+        thread t2(&RISCPipeline::fetch, this);
+        t1.join();
+        t2.join();
+     cout<<"-----------------"<<endl;
+        thread t3(&RISCPipeline::execute, this);
+        thread t4(&RISCPipeline::decode, this);
+        thread t9(&RISCPipeline::fetch, this);
+        t3.join();
+        t4.join();
+        t9.join();
+    cout<<"-----------------"<<endl;
+        thread t5(&RISCPipeline::memory, this);
+        thread t6(&RISCPipeline::execute, this);
+        thread t10(&RISCPipeline::decode, this);
+        thread t11(&RISCPipeline::fetch, this);
+        t5.join();
+        t6.join();
+        t10.join();
+        t11.join();
+    cout<<"-----------------"<<endl;
+        thread t7(&RISCPipeline::writeBack, this);
+        thread t8(&RISCPipeline::memory, this);
+        thread t12(&RISCPipeline::execute, this);
+        thread t13(&RISCPipeline::decode, this);
+        thread t14(&RISCPipeline::fetch, this);
+        t7.join();
+        t8.join();
+        t12.join();
+        t13.join();
+        t14.join();
+    cout<<"-----------------"<<endl;
+    }
+    else{
+        thread t7(&RISCPipeline::writeBack, this);
+        thread t8(&RISCPipeline::memory, this);
+        thread t12(&RISCPipeline::execute, this);
+        thread t13(&RISCPipeline::decode, this);
+        thread t14(&RISCPipeline::fetch, this);
+        t7.join();
+        t8.join();
+        t12.join();
+        t13.join();
+        t14.join();
+    cout<<"-----------------"<<endl;
+    }
     
-}*/
+    }
+}
 
 int main() {
     RISCPipeline pipeline;
-    thread t1(&RISCPipeline::fetch, &pipeline, 192);
-    thread t2(&RISCPipeline::decode, &pipeline);
-    thread t3(&RISCPipeline::execute, &pipeline);
-    thread t4(&RISCPipeline::memory, &pipeline);
-    thread t5(&RISCPipeline::writeBack, &pipeline);
-	
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
-    t5.join();
-
+    pipeline.runPipeline();
 
     return 0;
 }
